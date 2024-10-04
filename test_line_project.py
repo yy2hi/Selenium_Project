@@ -1,5 +1,6 @@
 import random
 import pytest
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -16,7 +17,8 @@ BASE_ROW = 7  # I열에 기록을 시작할 행 번호
 result_row = BASE_ROW  # 테스트 결과를 기록할 행 번호
 
 # 서비스 계정 키 파일 경로 (Google Cloud Console에서 받은 JSON 파일)
-SERVICE_ACCOUNT_FILE = 'C:\\Project\\Python\\LINE_Project\\dsstudy-375712-bafa8d5af4f8.json'
+current_dir = os.getcwd()
+SERVICE_ACCOUNT_FILE = os.path.join(current_dir, 'dsstudy-375712-bafa8d5af4f8.json')
 
 # 구글 스프레드시트 API에 접근하기 위한 인증 설정
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -82,41 +84,68 @@ def test_register(username, password):
         write_to_sheet("Pass")
     except Exception as e:
         write_to_sheet("Fail")
-        pytest.fail(f"Username input failed: {e}")
+        pytest.fail(f"Failed with exception: {e}")
         
+    try:
+        # 회원가입 모달창 내 Password 입력 
+        password_field = driver.find_element(By.XPATH, '//*[@id="sign-password"]')
+        password_field.send_keys(password)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
-    # 회원가입 모달창 내 Password 입력 
-    password_field = driver.find_element(By.XPATH, '//*[@id="sign-password"]')
-    password_field.send_keys(password)
+    try:
+        # 회원가입 모달창 내 Sign up 버튼 클릭
+        signup_btn = driver.find_element(By.XPATH, '//*[@id="signin2"]')
+        ActionChains(driver).click(signup_btn).perform()
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
-    # 회원가입 모달창 내 Sign up 버튼 클릭
-    signup_btn = driver.find_element(By.XPATH, '//*[@id="signin2"]')
-    ActionChains(driver).click(signup_btn).perform()
-
-def Login(username, password):
+def test_login(username, password):
     # Login 버튼 노출 대기
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="login2"]')))
 
-    # Login 버튼 클릭
-    login_btn = driver.find_element(By.XPATH, '//*[@id="login2"]')
-    driver.execute_script("arguments[0].click();", login_btn)
+    try:
+        # Login 버튼 클릭
+        login_btn = driver.find_element(By.XPATH, '//*[@id="login2"]')
+        driver.execute_script("arguments[0].click();", login_btn)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
     # Login 모달창 대기
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="logInModal"]/div/div/div[2]')))
 
-    # 로그인 모달창 내 Username 입력
-    username_field = driver.find_element(By.XPATH, '//*[@id="loginusername"]')
-    username_field.send_keys(username)
+    try:
+        # 로그인 모달창 내 Username 입력
+        username_field = driver.find_element(By.XPATH, '//*[@id="loginusername"]')
+        username_field.send_keys(username)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
-    # 로그인 모달창 내 Password 입력 
-    password_field = driver.find_element(By.XPATH, '//*[@id="loginpassword"]')
-    password_field.send_keys(password)
+    try:
+        # 로그인 모달창 내 Password 입력 
+        password_field = driver.find_element(By.XPATH, '//*[@id="loginpassword"]')
+        password_field.send_keys(password)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
-    # 로그인 모달창 내 Log in 버튼 클릭
-    signup_btn = driver.find_element(By.XPATH, '//*[@id="signin2"]')
-    ActionChains(driver).click(signup_btn).perform()
-
-def Add_cart():
+    try:
+        # 로그인 모달창 내 Log in 버튼 클릭
+        signup_btn = driver.find_element(By.XPATH, '//*[@id="signin2"]')
+        ActionChains(driver).click(signup_btn).perform()
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
+def test_add_cart():
     global count
 
     driver.implicitly_wait(1)
@@ -138,17 +167,27 @@ def Add_cart():
         # 선택된 이미지로 스크롤 이동
         driver.execute_script("arguments[0].scrollIntoView(true);", random_image)
 
-        # 선택된 이미지 강제로 클릭 (JavaScript로 클릭)
-        driver.execute_script("arguments[0].click();", random_image)
+        try:
+            # 선택된 이미지 강제로 클릭 (JavaScript로 클릭)
+            driver.execute_script("arguments[0].click();", random_image)
+            write_to_sheet("Pass")
+        except Exception as e:
+            write_to_sheet("Fail")
+            pytest.fail(f"Failed with exception: {e}")
     else:
         print("tbody 안에 이미지가 없습니다.")
 
     # Add to cart 버튼 노출 대기
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="tbodyid"]/div[2]/div/a')))
 
-    # Add to cart 버튼 클릭
-    addcart_btn = driver.find_element(By.XPATH, '//*[@id="tbodyid"]/div[2]/div/a')
-    driver.execute_script("arguments[0].click();", addcart_btn)
+    try:
+        # Add to cart 버튼 클릭
+        addcart_btn = driver.find_element(By.XPATH, '//*[@id="tbodyid"]/div[2]/div/a')
+        driver.execute_script("arguments[0].click();", addcart_btn)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
     # alert 노출 대기
     WebDriverWait(driver, 10).until(EC.alert_is_present())
@@ -165,23 +204,34 @@ def Add_cart():
 
     count += 1
 
-def Check_cart(i):
+def test_check_cart(i):
     global count  # 전역 변수 count 사용
 
     # Cart 버튼 노출 대기
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="login2"]')))
 
-    # Cart 버튼 클릭
-    cart_btn = driver.find_element(By.XPATH, '//*[@id="navbarExample"]/ul/li[4]/a')
-    driver.execute_script("arguments[0].click();", cart_btn)
+    try:
+        # Cart 버튼 클릭
+        cart_btn = driver.find_element(By.XPATH, '//*[@id="navbarExample"]/ul/li[4]/a')
+        driver.execute_script("arguments[0].click();", cart_btn)
+        write_to_sheet("Pass")
+    except Exception as e:
+        write_to_sheet("Fail")
+        pytest.fail(f"Failed with exception: {e}")
 
     # i와 count 비교
     if i == count:
         print("Success: i와 count가 같습니다.")
+        try:
+            write_to_sheet("Pass")
+        except Exception as e:
+            write_to_sheet("Fail")
+            pytest.fail(f"Failed with exception: {e}")
+
     else:
         print(f"Failure: i({i})와 count({count})가 다릅니다.")
 
-def Delete_item():
+def test_delete_item():
     # 모든 "Delete" 텍스트가 포함된 요소를 찾습니다.
     delete_buttons = driver.find_elements(By.XPATH, "//*[text()='Delete']")
 
@@ -191,8 +241,13 @@ def Delete_item():
         random_delete = random.choice(delete_buttons)
 
         # 선택된 요소 클릭
-        driver.execute_script("arguments[0].click();", random_delete)
-        print("랜덤으로 'Delete' 버튼을 클릭했습니다.")
+        try:
+            driver.execute_script("arguments[0].click();", random_delete)
+            print("랜덤으로 'Delete' 버튼을 클릭했습니다.")
+            write_to_sheet("Pass")
+        except Exception as e:
+            write_to_sheet("Fail")
+            pytest.fail(f"Failed with exception: {e}")
     else:
         print("'Delete' 버튼을 찾을 수 없습니다.")
 
@@ -202,13 +257,13 @@ if __name__ == "__main__":
     username = input("Enter the username: ")
     password = input("Enter the password: ")
 
-    Open_url()
-    Register(username, password)
-    Login(username, password)
+    test_open_url()
+    test_register(username, password)
+    test_login(username, password)
     for i in range(4):
-        Add_cart() 
+        test_add_cart() 
 
-    Check_cart(i)
-    Delete_item()
+    test_check_cart(i)
+    test_delete_item()
 
     print("automation finish")
