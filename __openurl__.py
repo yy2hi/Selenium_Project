@@ -24,5 +24,5 @@ def test_open_url(sheet_name):
 
     return driver
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     test_open_url("Login")

@@ -12,10 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
-driver = None
-
 def create_driver():
-    global driver
     ## webdriver 생성
     chrome_options = webdriver.ChromeOptions() 
     chrome_options.add_experimental_option("detach", True) # 브라우저 자동 종료 방지
