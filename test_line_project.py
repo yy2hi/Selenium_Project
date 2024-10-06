@@ -1,4 +1,5 @@
 import random
+import json
 import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,28 +12,35 @@ from webdriver_manager.chrome import ChromeDriverManager
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
+# 설정 파일 read
+def load_config(config_path='config.json'):
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+# 설정 로드
+config = load_config()
 
 ## Google Sheets API 인증 및 스프레드시트 접근 설정
-SPREADSHEET_ID = '1I97oWxnWm3V7b3F1M-oc-SntYrbt_PvVeWe7kIEaNDU'  # 구글 스프레드시트 ID
-result_row = 7  # 테스트 결과 기록 시작 행 번호
+SPREADSHEET_ID = config["SPREADSHEET_ID"]  # 구글 스프레드시트 ID (config 설정 파일)
+result_row = config["START_ROW"]  # 테스트 결과 기록 시작 행 번호 (config 설정 파일)
 
 ## 구글 서비스 계정 키 파일 경로
 current_dir = os.getcwd() # 현재 경로
-SERVICE_ACCOUNT_FILE = os.path.join(current_dir, 'dsstudy-375712-bafa8d5af4f8.json')
+SERVICE_ACCOUNT_FILE = os.path.join(current_dir, config["SERVICE_ACCOUNT_FILE"])
 
 ## 구글 스프레드시트 API 사용 인증 설정
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets'] # 읽기 및 쓰기 권한
+SCOPES = config["SCOPES"] # 읽기 및 쓰기 권한 (config 설정 파일)
 creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES) # Google Cloud 서비스 계정 인증
 service = build('sheets', 'v4', credentials=creds) # Google Sheets API 클라이언트 생성
 sheet = service.spreadsheets() 
 
 ## 스프레드시트에 테스트 결과 기록 함수
-def write_to_sheet(result, exception_msg=None):
+def write_to_sheet(result, note=None):
     global result_row
     body = {
-        'values': [[result, exception_msg]]  # 테스트 결과 (Pass or Fail or N / A) 및 예외 메시지 기록
+        'values': [[result, note]]  # 테스트 결과 (Pass or Fail or N / A) 및 메시지 기록
     }
-    # 스프레드시트의 I열에 테스트 결과, J열에 예외 메시지 기록
+    # 스프레드시트의 I열에 테스트 결과, J열에 메시지 기록
     sheet.values().update(
         spreadsheetId=SPREADSHEET_ID,
         range=f'H{result_row}:I{result_row}',
@@ -46,7 +54,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_experimental_option("detach", True) # 브라우저 자동 종료 방지
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options) # ChromeDriver 자동 설치, detach 모드로 ChromeDriver 실행
 
-count = -1 # 장바구니 수량 확인용
+selected_items =[] # 장바구니 담긴 제품
 
 ## 테스트 할 페이지 오픈 및 최대화
 def test_open_url():
@@ -124,7 +132,7 @@ def test_register(username, password):
         username_field = driver.find_element(By.XPATH, '//*[@id="sign-username"]')
         username_field.send_keys(username)
         print("회원가입 모달창 내 Username 입력: Pass")
-        write_to_sheet("Pass", "")
+        write_to_sheet("Pass", username)
     except Exception as e:
         error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
         
@@ -141,7 +149,7 @@ def test_register(username, password):
         password_field = driver.find_element(By.XPATH, '//*[@id="sign-password"]')
         password_field.send_keys(password)
         print("회원가입 모달창 내 Password 입력: Pass")
-        write_to_sheet("Pass", "")
+        write_to_sheet("Pass", password)
     except Exception as e:
         error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
         
@@ -250,7 +258,7 @@ def test_login(username, password):
         username_field = driver.find_element(By.XPATH, '//*[@id="loginusername"]')
         username_field.send_keys(username)
         print("Log in 모달창 내 Username 입력: Pass")
-        write_to_sheet("Pass", "")
+        write_to_sheet("Pass", username)
     except Exception as e:
         error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
         
@@ -267,7 +275,7 @@ def test_login(username, password):
         password_field = driver.find_element(By.XPATH, '//*[@id="loginpassword"]')
         password_field.send_keys(password)
         print("로그인 모달창 내 Password 입력: Pass")
-        write_to_sheet("Pass", "")
+        write_to_sheet("Pass", password)
     except Exception as e:
         error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
         
@@ -332,7 +340,8 @@ def test_login(username, password):
             write_to_sheet("Fail", error_message)
 
 def test_add_cart(i):
-    global count
+    global selected_items
+
     driver.implicitly_wait(1) # 웹 페이지 요소 찾는 암시적 대기
 
     # TC14, 18, 22, 26. 제품 노출 확인
@@ -350,22 +359,36 @@ def test_add_cart(i):
         else:
             print("제품 노출: Fail")
             write_to_sheet("Fail", error_message)
+ 
+    # tbodyid 중 하위 a 요소들 (ex.//*[@id="tbodyid"]/div[6]/div/div/h4/a)
+    item_links = driver.find_elements(By.XPATH, '//*[@id="tbodyid"]//h4/a')
 
-    # tbodyid 중 img 요소들
-    images = driver.find_elements(By.XPATH, '//*[@id="tbodyid"]//img')
+    # 선택된 제품 제외
+    available_items = []
+    for item in item_links:
+        item_name = item.text # a 태그 텍스트
 
-    if images:
-        # 이미지들 중 하나 랜덤 선택
-        random_image = random.choice(images)
+        if item_name not in selected_items:
+            available_items.append(item)
+ 
+    if available_items:
+        # 제품들 중 하나 랜덤 선택
+        random_item = random.choice(available_items)
+
+        # 선택된 제품명 추출
+        item_name = random_item.text
 
         # 선택된 이미지로 스크롤 이동
-        driver.execute_script("arguments[0].scrollIntoView(true);", random_image)
+        driver.execute_script("arguments[0].scrollIntoView(true);", random_item)
 
         # TC15, 19, 23, 27. 해당 제품 설명 페이지 이동 확인
         try:
-            driver.execute_script("arguments[0].click();", random_image)
+            driver.execute_script("arguments[0].click();", random_item)
             print(f"{i+1}번째 제품 설명 페이지 이동: Pass")
-            write_to_sheet("Pass", "")
+            write_to_sheet("Pass", item_name)
+
+            # 선택된 제품 selected_items에 추가
+            selected_items.append(item_name)
         except Exception as e:
             error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
             print(f"{i+1}번째 제품 설명 페이지 이동: Fail")
@@ -417,10 +440,9 @@ def test_add_cart(i):
     home_btn = driver.find_element(By.XPATH, '//*[@id="nava"]')
     driver.execute_script("arguments[0].click();", home_btn)
 
-    count += 1
 
 def test_check_cart(i):
-    global count  # 전역 변수 count 사용
+    global selected_items
 
     # TC30. Cart 버튼 노출 확인
     try:
@@ -456,24 +478,50 @@ def test_check_cart(i):
             write_to_sheet("Fail", error_message)
 
     # TC32. Cart 페이지에 정상적으로 제품 저장 확인
-    if i == count:
-        try:
-            print("Cart 페이지에 정상적으로 제품 저장: Pass")
-            write_to_sheet("Pass", "")
-        except Exception as e:
-            error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
-            # 예외 유형이 ElementNotInteractableException이면 N / A로 기록
-            if type(e).__name__ == "ElementNotInteractableException":
-                print("Cart 페이지에 정상적으로 제품 저장: N / A")
-                write_to_sheet("N / A", error_message)
-            else:
-                print("Cart 페이지에 정상적으로 제품 저장: Fail")
-                write_to_sheet("Fail", error_message)
+    try:
+        # 장바구니 페이지에서 제품 이름 추출
+        cart_items = driver.find_elements(By.XPATH, '//*[@id="tbodyid"]/tr/td[2]')
+
+        # 장바구니에 담긴 제품 이름 리스트
+        cart_item_names = []
+        for item in cart_items:
+            item_name = item.text
+            cart_item_names.append(item_name)
+
+        # selected_items에 있는 제품 이름들이 장바구니에 있는지 확인
+        check_items_in_cart = True
+        for item in selected_items:
+            if item not in cart_item_names:
+                check_items_in_cart = False
+                break
+
+        if check_items_in_cart == True:
+            # 장바구니에 담긴 제품 이름 리스트 출력용
+            cart_items_str = ", ".join(cart_item_names)
+            
+            print("Cart 페이지에 정상적으로 모든 제품 저장: Pass")
+            write_to_sheet("Pass", cart_items_str)
+        else:
+            # 장바구니에 담기지 않은 제품 추출
+            missing_items = []
+            for item in selected_items:
+                if item not in cart_item_names:
+                    missing_items.append(item)
+            print(f"Cart 내 누락된 제품 {missing_items}: Fail")
+            write_to_sheet("Fail", f"누락된 제품: {missing_items}")
+    except Exception as e:
+        error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
+        if type(e).__name__ == "ElementNotInteractableException":
+            print("Cart 페이지에 정상적으로 제품 저장: N / A")
+            write_to_sheet("N / A", error_message)
+        else:
+            print("Cart 페이지에 정상적으로 제품 저장: Fail")
+            write_to_sheet("Fail", error_message)
 
 def test_delete_item():
     # TC33. 장바구니 내 제품 삭제 버튼 노출 확인
     try:
-        delete_buttons = driver.find_elements(By.XPATH, "//*[text()='Delete']")
+        delete_buttons = driver.find_elements(By.XPATH, "//*[@id='tbodyid']//a")
         print("Delete 버튼 노출: Pass")
         write_to_sheet("Pass", "")
     except Exception as e:
@@ -490,18 +538,26 @@ def test_delete_item():
         # delete_buttons 중 하나 랜덤 선택
         random_delete = random.choice(delete_buttons)
 
-        # TC34. 장바구니 내 제품 삭제 가능 확인
         try:
-            driver.execute_script("arguments[0].click();", random_delete)
-            print("장바구니 내 제품 삭제: Pass")
-            write_to_sheet("Pass", "")
+            # 상위 요소로부터 제품 이름이 들어있는 <td> 찾기
+            item_name_xpath = "./ancestor::tr/td[2]"
+            delete_item = random_delete.find_element(By.XPATH, item_name_xpath).text  # random_delete 할 제품 이름 추출
+
+            # TC34. 장바구니 내 제품 삭제 가능 확인
+            try:
+                driver.execute_script("arguments[0].click();", random_delete)
+                print(f"삭제된 제품 {delete_item}: Pass ")
+                write_to_sheet("Pass", delete_item)
+            except Exception as e:
+                error_message = f"{type(e).__name__}"
+                if type(e).__name__ == "ElementNotInteractableException":
+                    print("장바구니 내 제품 삭제: N / A")
+                    write_to_sheet("N / A", error_message)
+                else:
+                    print("장바구니 내 제품 삭제: Fail")
+                    write_to_sheet("Fail", error_message)
         except Exception as e:
-            if type(e).__name__ == "ElementNotInteractableException":
-                print("장바구니 내 제품 삭제: N / A")
-                write_to_sheet("N / A", error_message)
-            else:
-                print("장바구니 내 제품 삭제: Fail")
-                write_to_sheet("Fail", error_message)
+            print("장바구니 내 제품 이름 미노출:", str(e))
 
 # 유효성 검증을 위해 테스터가 id / pw 입력
 if __name__ == "__main__":
@@ -511,10 +567,11 @@ if __name__ == "__main__":
     test_open_url()
     test_register(username, password)
     test_login(username, password)
+    
     for i in range(4):
         test_add_cart(i) 
 
     test_check_cart(i)
     test_delete_item()
 
-    print("Automation test completed.")
+    print("******************************Automation test completed.******************************")

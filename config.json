@@ -1,0 +1,6 @@
+{
+    "SPREADSHEET_ID": "1I97oWxnWm3V7b3F1M-oc-SntYrbt_PvVeWe7kIEaNDU",
+    "START_ROW": 7,
+    "SERVICE_ACCOUNT_FILE": "dsstudy-375712-bafa8d5af4f8.json",
+    "SCOPES": ["https://www.googleapis.com/auth/spreadsheets"]
+}
