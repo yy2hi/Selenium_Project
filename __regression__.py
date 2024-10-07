@@ -86,7 +86,7 @@ def register(username, password):
             print("회원가입 모달창 내 Password 입력: Fail")
             write_to_sheet("Regression", "Fail", error_message)
 
-    # TC7. 회원가입 모달창 내 Sign up 버튼 클릭 확인
+    # TC7. 회원가입 성공 여부 확인
     try:
         signup_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[2]')
         ActionChains(driver).click(signup_btn).perform()
@@ -104,17 +104,17 @@ def register(username, password):
         alert.accept()
 
         if alert_text == "This user already exist.":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Regression", "Fail", alert_text)
             close_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[1]')
             ActionChains(driver).click(close_btn).perform()
         elif alert_text == "Please fill out Username and Password.":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Regression", "Fail", alert_text)
             close_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[1]')
             ActionChains(driver).click(close_btn).perform()
         else:
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Pass")
+            print("회원가입 성공 여부: Pass")
             write_to_sheet("Regression", "Pass", alert_text)
 
     except Exception as e:
@@ -122,10 +122,10 @@ def register(username, password):
         
         # 예외 유형이 ElementNotInteractableException이면 N / A로 기록
         if type(e).__name__ == "ElementNotInteractableException":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: N / A")
+            print("회원가입 성공 여부: N / A")
             write_to_sheet("Regression", "N / A", error_message)
         else:
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Regression", "Fail", error_message)
 
 def login(username, password):
@@ -402,9 +402,9 @@ def check_cart():
             print("Cart 버튼 클릭: Fail")
             write_to_sheet("Regression", "Fail", error_message)
 
- # TC32. Cart 페이지에 정상적으로 제품 저장 확인
+    # TC32. Cart 페이지에 정상적으로 제품 저장 확인
     try:
-        # 페이지 끝까지 스크롤 내리기 (여러 번 시도)
+        # 페이지 끝까지 스크롤 내리기
         last_height = driver.execute_script("return document.body.scrollHeight")
         
         # 추출한 제품명을 저장할 리스트
@@ -414,36 +414,43 @@ def check_cart():
             # 페이지 끝까지 스크롤
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             
-            time.sleep(2)  # 스크롤 후 2초 대기
-            
-            # 현재까지 로드된 제품 추출
-            cart_items = driver.find_elements(By.XPATH, '//*[@id="tbodyid"]/tr/td[2]')
-            
-            # 현재까지 로드된 제품 이름 저장
-            for item in cart_items:
-                item_name = item.text
-                cart_item_names.append(item_name)
+            time.sleep(1)  # 스크롤 후 대기
             
             # 새로운 페이지 높이 가져오기
             new_height = driver.execute_script("return document.body.scrollHeight")
             
             # 더 이상 스크롤이 없을 경우 종료
             if new_height == last_height:
-                break
+                time.sleep(1)
+                new_height = driver.execute_script("return document.body.scrollHeight")
+                            
+                # 현재까지 로드된 제품 추출
+                cart_items = driver.find_elements(By.XPATH, '//*[@id="tbodyid"]/tr/td[2]')       
+
+                # 현재까지 로드된 제품 이름 저장
+                for item in cart_items:
+                    item_name = item.text
+                    cart_item_names.append(item_name)
+
+                if new_height == last_height:
+                    break
             last_height = new_height
 
-            # 스크롤 완료 후 모든 제품 수집이 끝났을 때 selected_items와 비교
-            missing_items = [item for item in selected_items if item not in cart_item_names]
+        # 제품 추출 후 selected_items와 비교해 제품 없는경우 missing_items에 추가
+        missing_items = []
+        for item in selected_items:
+            if item not in cart_item_names:
+                missing_items.append(item)
 
-            if not missing_items:
-                # 모든 제품이 정상적으로 장바구니에 담겨있는 경우
-                cart_items_str = ", ".join(cart_item_names)
-                print("Cart 페이지에 정상적으로 모든 제품 저장: Pass")
-                write_to_sheet("Regression", "Pass", cart_items_str)
-            else:
-                # selected_items 중 장바구니에 누락된 제품이 있는 경우
-                print(f"Cart 내 누락된 제품 {missing_items}: Fail")
-                write_to_sheet("Regression", "Fail", f"누락된 제품: {missing_items}")
+        if not missing_items:
+            # 모든 제품이 정상적으로 장바구니에 담겨있는 경우
+            print("Cart 페이지에 정상적으로 모든 제품 저장: Pass")
+            write_to_sheet("Regression", "Pass", f"이번 장바구니에 담은 제품: {selected_items}")
+        else:
+            # selected_items 중 장바구니에 누락된 제품이 있는 경우
+            print(f"Cart 내 누락된 제품 {missing_items}: Fail")
+            write_to_sheet("Regression", "Fail", f"누락된 제품: {missing_items}")
+
     except Exception as e:
         error_message = f"{type(e).__name__}"  # 예외 클래스의 이름만 추출
         if type(e).__name__ == "ElementNotInteractableException":
@@ -452,7 +459,6 @@ def check_cart():
         else:
             print("Cart 페이지에 정상적으로 제품 저장: Fail")
             write_to_sheet("Regression", "Fail", error_message)
-
 
 def delete_item():
     # TC33. 장바구니 내 제품 삭제 버튼 노출 확인
@@ -482,7 +488,7 @@ def delete_item():
             # TC34. 장바구니 내 제품 삭제 가능 확인
             try:
                 driver.execute_script("arguments[0].click();", random_delete)
-                print(f"삭제된 제품 {delete_item}: Pass ")
+                print(f"삭제된 제품: {delete_item}: Pass ")
                 write_to_sheet("Regression", "Pass", delete_item)
             except Exception as e:
                 error_message = f"{type(e).__name__}"

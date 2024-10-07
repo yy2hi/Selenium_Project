@@ -23,6 +23,3 @@ def open_url(sheet_name):
             write_to_sheet(sheet_name, "Fail", error_message)
 
     return driver
-
-if __name__ == '__main__':
-    open_url("Login")
