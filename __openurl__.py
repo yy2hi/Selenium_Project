@@ -2,7 +2,7 @@ from __common__ import *
 
 
 ## 테스트 할 페이지 오픈 및 최대화
-def test_open_url(sheet_name):
+def open_url(sheet_name):
     driver = create_driver()
     # TC1. 테스트 페이지 접근 확인
     try:
@@ -25,4 +25,4 @@ def test_open_url(sheet_name):
     return driver
 
 if __name__ == '__main__':
-    test_open_url("Login")
+    open_url("Login")

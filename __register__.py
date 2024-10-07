@@ -1,7 +1,7 @@
 from __common__ import *
-from __openurl__ import test_open_url
+from __openurl__ import open_url
 
-def test_register(driver, username, password):
+def register(username, password):
     # TC2. Sign up GNB 노출 확인
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="signin2"]')))
@@ -132,5 +132,7 @@ def test_register(driver, username, password):
 if __name__ == "__main__":
     username = input("Enter the username: ")
     password = input("Enter the password: ")
-    driver = test_open_url("Register")
-    test_register(driver, username, password)
+    driver = open_url("Register")
+    register(username, password)
+    input("Press Enter to quit the script and close the browser")
+    print("******************************Register test completed.******************************")

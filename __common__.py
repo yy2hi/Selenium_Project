@@ -1,4 +1,5 @@
 import random
+import time
 import json
 import os
 from selenium import webdriver
@@ -12,6 +13,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
+selected_items = [] # 장바구니 담긴 제품
+available_items = [] # 장바구니에 담을 제품
 def create_driver():
     ## webdriver 생성
     chrome_options = webdriver.ChromeOptions() 
