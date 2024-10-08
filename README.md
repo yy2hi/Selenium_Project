@@ -8,5 +8,5 @@
 <br>
 
 [트러블 슈팅] <br>
-스크립트 실행 시 THIRD_PARTY_NOTICES.chromedriver 로 실행된다면, 사용되는 chromedriver 경로에서 해당 파일 삭제 후 재 실행 <br>
-ex) C:\Users\user\.wdm\drivers\chromedriver\win64\129.0.6668.89\chromedriver-win32
+스크립트 실행 시 THIRD_PARTY_NOTICES.chromedriver 로 실행된다면, 사용되는 chromedriver 경로에서 THIRD_PARTY_NOTICES.chromedriver 파일 삭제 후 재 실행 <br>
+ex) C:\Users\user\.wdm\drivers\chromedriver\win64\129.0.6668.89\chromedriver-win32 경로의 THIRD_PARTY_NOTICES.chromedriver
