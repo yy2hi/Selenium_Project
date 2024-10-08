@@ -86,7 +86,7 @@ def register(username, password):
             print("회원가입 모달창 내 Password 입력: Fail")
             write_to_sheet("Register", "Fail", error_message)
 
-    # TC7. 회원가입 모달창 내 Sign up 버튼 클릭 확인
+    # TC7. 회원가입 성공 여부 확인
     try:
         signup_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[2]')
         ActionChains(driver).click(signup_btn).perform()
@@ -104,17 +104,17 @@ def register(username, password):
         alert.accept()
 
         if alert_text == "This user already exist.":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Register", "Fail", alert_text)
             close_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[1]')
             ActionChains(driver).click(close_btn).perform()
         elif alert_text == "Please fill out Username and Password.":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Register", "Fail", alert_text)
             close_btn = driver.find_element(By.XPATH, '//*[@id="signInModal"]/div/div/div[3]/button[1]')
             ActionChains(driver).click(close_btn).perform()
         else:
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Pass")
+            print("회원가입 성공 여부: Pass")
             write_to_sheet("Register", "Pass", alert_text)
 
     except Exception as e:
@@ -122,10 +122,10 @@ def register(username, password):
         
         # 예외 유형이 ElementNotInteractableException이면 N / A로 기록
         if type(e).__name__ == "ElementNotInteractableException":
-            print("회원가입 모달창 내 Sign up 버튼 클릭: N / A")
+            print("회원가입 성공 여부: N / A")
             write_to_sheet("Register", "N / A", error_message)
         else:
-            print("회원가입 모달창 내 Sign up 버튼 클릭: Fail")
+            print("회원가입 성공 여부: Fail")
             write_to_sheet("Register", "Fail", error_message)
 
 

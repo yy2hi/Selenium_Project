@@ -225,7 +225,7 @@ def delete_item():
             # TC34. 장바구니 내 제품 삭제 가능 확인
             try:
                 driver.execute_script("arguments[0].click();", random_delete)
-                print(f"삭제된 제품 {delete_item}: Pass ")
+                print(f"삭제된 제품: {delete_item}: Pass ")
                 write_to_sheet("CheckCart", "Pass", delete_item)
             except Exception as e:
                 error_message = f"{type(e).__name__}"

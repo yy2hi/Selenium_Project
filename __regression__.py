@@ -212,9 +212,9 @@ def login(username, password):
             print("로그인 모달창 내 Password 입력: Fail")
             write_to_sheet("Regression", "Fail", error_message)
 
-    # TC13. 로그인 모달창 내 Log in 버튼 클릭 확인
+    # TC13. 로그인 성공 여부 확인
     try:
-        # 로그인 모달창 내 Log in 버튼 클릭
+        # 로그인 성공 여부
         login_btn = driver.find_element(By.XPATH, '//*[@id="logInModal"]/div/div/div[3]/button[2]')
         ActionChains(driver).click(login_btn).perform()
 
@@ -233,24 +233,24 @@ def login(username, password):
 
             # alert 텍스트에 따라 처리
             if alert_text == "User does not exist.":
-                print("로그인 모달창 내 Log in 버튼 클릭: Fail")
+                print("로그인 성공 여부: Fail")
                 write_to_sheet("Regression", "Fail", alert_text)
                 close_btn = driver.find_element(By.XPATH, '//*[@id="logInModal"]/div/div/div[3]/button[1]')
                 ActionChains(driver).click(close_btn).perform()
             elif alert_text == "Wrong password.":
-                print("로그인 모달창 내 Log in 버튼 클릭: Fail")
+                print("로그인 성공 여부: Fail")
                 write_to_sheet("Regression", "Fail", alert_text)
                 close_btn = driver.find_element(By.XPATH, '//*[@id="logInModal"]/div/div/div[3]/button[1]')
                 ActionChains(driver).click(close_btn).perform()
             elif alert_text == "Please fill out Username and Password.":
-                print("로그인 모달창 내 Log in 버튼 클릭: Fail")
+                print("로그인 성공 여부: Fail")
                 write_to_sheet("Regression", "Fail", alert_text)
                 close_btn = driver.find_element(By.XPATH, '//*[@id="logInModal"]/div/div/div[3]/button[1]')
                 ActionChains(driver).click(close_btn).perform()
         
         except TimeoutException:
             # alert가 뜨지 않으면 로그인 성공으로 처리
-            print("로그인 모달창 내 Log in 버튼 클릭: Pass")
+            print("로그인 성공 여부: Pass")
             write_to_sheet("Regression", "Pass", "")
 
     except Exception as e:
@@ -258,10 +258,10 @@ def login(username, password):
         
         # 예외 유형이 ElementNotInteractableException이면 N / A로 기록
         if type(e).__name__ == "ElementNotInteractableException":
-            print("로그인 모달창 내 Log in 버튼 클릭: N / A")
+            print("로그인 성공 여부: N / A")
             write_to_sheet("Regression", "N / A", error_message)
         else:
-            print("로그인 모달창 내 Log in 버튼 클릭: Fail")
+            print("로그인 성공 여부: Fail")
             write_to_sheet("Regression", "Fail", error_message)
 
 def add_cart(i):
