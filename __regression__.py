@@ -518,4 +518,5 @@ if __name__ == "__main__":
     delete_item()
 
     input("Press Enter to quit the script and close the browser")
+    driver.quit()
     print("******************************Regression test completed.******************************")

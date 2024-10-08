@@ -246,4 +246,5 @@ if __name__ == "__main__":
     check_cart()
     delete_item()
     input("Press Enter to quit the script and close the browser")
+    driver.quit()
     print("******************************CheckCart test completed.******************************")

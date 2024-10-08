@@ -111,4 +111,5 @@ if __name__ == '__main__':
         print(f"선택된 아이템: {selected_items}")
 
     input("Press Enter to quit the script and close the browser")
+    driver.quit()
     print("******************************AddCart test completed.******************************")

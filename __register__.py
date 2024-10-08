@@ -135,4 +135,5 @@ if __name__ == "__main__":
     driver = open_url("Register")
     register(username, password)
     input("Press Enter to quit the script and close the browser")
+    driver.quit()
     print("******************************Register test completed.******************************")

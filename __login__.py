@@ -143,4 +143,5 @@ if __name__ == '__main__':
     driver = open_url("Login")
     login(username, password)
     input("Press Enter to quit the script and close the browser")
+    driver.quit()
     print("******************************Login test completed.******************************")
